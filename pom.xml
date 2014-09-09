@@ -136,7 +136,6 @@
                     </webappDirectory>
                     <hostedWebapp>${basedir}/src/main/webapp/VAADIN/widgetsets
                     </hostedWebapp>
-                    <extraJvmArgs>-Xmx1g -Xss4024k</extraJvmArgs>
                     <noServer>true</noServer>
                     <!-- Remove draftCompile when project is ready -->
                     <draftCompile>false</draftCompile>

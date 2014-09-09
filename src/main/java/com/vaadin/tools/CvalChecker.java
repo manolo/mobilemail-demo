@@ -469,7 +469,7 @@ public final class CvalChecker {
 
         try {
             String dotLicenseName = "." + licenseName;
-            String userHome = "file://" + System.getProperty("user.home") + "/";
+            String userHome = "file:///" + System.getProperty("user.home") + "/";
             System.err.println(userHome);
             for (URL url : new URL[] { new URL(userHome + dotLicenseName),
                     new URL(userHome + licenseName),
