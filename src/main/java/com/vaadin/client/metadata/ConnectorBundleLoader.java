@@ -19,15 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.user.client.Window;
+import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Position;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.TouchStartEvent;
+import com.google.gwt.event.dom.client.TouchStartHandler;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.Widget;
-import com.vaadin.client.ApplicationConfiguration;
 import com.vaadin.client.FastStringMap;
 import com.vaadin.client.metadata.AsyncBundleLoader.State;
-import com.vaadin.client.ui.VNotification;
-import com.vaadin.shared.Position;
 
 public abstract class ConnectorBundleLoader {
 
@@ -50,6 +52,8 @@ public abstract class ConnectorBundleLoader {
     public static final String DEFERRED_BUNDLE_NAME = "__deferred";
 
     private static ConnectorBundleLoader impl;
+
+    private static HTML notice;
 
     private FastStringMap<AsyncBundleLoader> asyncBlockLoaders = FastStringMap
             .create();
@@ -146,23 +150,40 @@ public abstract class ConnectorBundleLoader {
                 String ns = c.widgetset.replaceFirst("\\.[^\\.]+$", "");
                 if (typeName.startsWith(ns)) {
                     cvals.remove(c);
-                    msg += c.product + " " + c.version + "<br/>";
+                    msg += c.product + " " + c.version + "\n";
                 }
             }
             if (!msg.isEmpty()) {
-                // We need a widget for using VNotification, using the
-                // context-menu parent. Is there an easy way?
-                Widget w = ApplicationConfiguration.getRunningApplications()
-                        .get(0).getContextMenu().getParent();
-//                if (w == null) {
-//                    w = RootPanel.get();
-//                }
-                VNotification n = VNotification.createNotification(0, w);
-                Window.alert(">> " + (n!=null) + " " + (w!=null));
-                n.setWidget(new HTML("Using Evaluation License of:<br/>" + msg));
-                n.show(Position.BOTTOM_RIGHT);
-                Window.alert(n.getElement().getString());
+                showNotice("Using Evaluation License of:\n" + msg);
             }
         }
+    }
+
+    // Not using Vaadin notifications (#14597)
+    private static void showNotice(String msg) {
+        if (notice == null) {
+            notice = new HTML();
+            Style s = notice.getElement().getStyle();
+            s.setColor("white");
+            s.setPosition(Position.FIXED);
+            s.setBottom(15, Unit.PX);
+            s.setRight(15, Unit.PX);
+            s.setFontSize(1.3, Unit.EM);
+            s.setProperty("text-shadow", "2px 1px 4px black");
+            s.setZIndex(2147483646);
+            notice.addClickHandler(new ClickHandler() {
+                public void onClick(ClickEvent event) {
+                    notice.removeFromParent();
+                }
+            });
+            notice.addTouchStartHandler(new TouchStartHandler() {
+                public void onTouchStart(TouchStartEvent event) {
+                    notice.removeFromParent();
+                }
+            });
+        }
+        notice.setHTML(msg.replace("\n", "<br/>"));
+        notice.setVisible(true);
+        RootPanel.get().add(notice);
     }
 }

@@ -183,7 +183,7 @@ public final class CvalChecker {
                 throws IOException {
             String url = licenseUrl + productKey;
             URLConnection con;
-            try {
+//            try {
                 // Send some additional info in the User-Agent string.
                 String ua = "Cval " + productName + " " + productKey + " "
                         + getFirstLaunch();
@@ -191,6 +191,7 @@ public final class CvalChecker {
                         "java.version", "os.name", "os.version", "os.arch")) {
                     ua += " " + System.getProperty(prop, "-").replace(" ", "_");
                 }
+                try {
                 System.err.println(">>>>> " + url);
                 con = new URL(url).openConnection();
                 con.setRequestProperty("User-Agent", ua);
@@ -199,10 +200,14 @@ public final class CvalChecker {
                 String r = IOUtils.toString(con.getInputStream());
                 System.err.println(">>>> " + r);
                 return r;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                return null;
-            }
+                } catch(Exception e) {
+                    e.printStackTrace();
+                    throw new RuntimeException(e);
+                }
+//            } catch (MalformedURLException e) {
+//                e.printStackTrace();
+//                return null;
+//            }
         }
 
         /*
@@ -285,6 +290,8 @@ public final class CvalChecker {
      */
     static void cacheLicenseInfo(CvalInfo info) {
         if (info != null) {
+            System.err.println("CACHING");
+            try {
             Preferences p = Preferences.userNodeForPackage(CvalInfo.class);
             if (info.toString().length() > Preferences.MAX_VALUE_LENGTH) {
                 // This should never happen since MAX_VALUE_LENGTH is big
@@ -293,7 +300,11 @@ public final class CvalChecker {
                 // discard it in cache and would use hard-coded messages.
                 info.setMessage(null);
             }
+            System.err.println("CACHING ...");
             p.put(info.getProduct().getName(), info.toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -301,8 +312,13 @@ public final class CvalChecker {
      * used in tests
      */
     static void deleteCache(String productName) {
+        System.err.println("DELETE");
+        try {
         Preferences p = Preferences.userNodeForPackage(CvalInfo.class);
         p.remove(productName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -445,6 +461,8 @@ public final class CvalChecker {
     }
 
     private CvalInfo getCachedLicenseInfo(String productName) {
+        System.err.println("GETTTTT ");
+        try {
         Preferences p = Preferences.userNodeForPackage(CvalInfo.class);
         String json = p.get(productName, "");
         if (!json.isEmpty()) {
@@ -452,6 +470,9 @@ public final class CvalChecker {
             if (info != null) {
                 return info;
             }
+        }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return null;
     }
