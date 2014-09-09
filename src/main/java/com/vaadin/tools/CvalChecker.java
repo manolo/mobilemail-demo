@@ -469,19 +469,24 @@ public final class CvalChecker {
         try {
             String dotLicenseName = "." + licenseName;
             String userHome = "file://" + System.getProperty("user.home") + "/";
+            System.err.println(userHome);
             for (URL url : new URL[] { new URL(userHome + dotLicenseName),
                     new URL(userHome + licenseName),
                     URL.class.getResource("/" + dotLicenseName),
                     URL.class.getResource("/" + licenseName) }) {
 
+                System.err.println(url);
                 if (url != null) {
+                    System.err.println("READING: " + url);
                     try {
                         key = readKeyFromFile(url,
                                 computeMajorVersion(productVersion));
+                        System.err.println("KEY " + key);
                         if (key != null && !(key = key.trim()).isEmpty()) {
                             return key;
                         }
                     } catch (IOException ignored) {
+                        ignored.printStackTrace();
                     }
                 }
             }
