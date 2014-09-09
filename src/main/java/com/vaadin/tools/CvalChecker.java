@@ -462,6 +462,7 @@ public final class CvalChecker {
         String licenseName = computeLicenseName(productName);
 
         String key = System.getProperty(licenseName);
+        System.err.println(licenseName + " -> " + key);
         if (key != null && !key.isEmpty()) {
             return key;
         }
