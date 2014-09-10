@@ -15,7 +15,7 @@ import com.vaadin.ui.UI;
 
 @SuppressWarnings("serial")
 @WebServlet(value = "/*", asyncSupported = true, 
-     initParams = { @WebInitParam(name = "productionMode", value = "true") })
+     initParams = { @WebInitParam(name = "productionMode", value = "false") })
 public class MobileMailServlet extends TouchKitServlet {
 
     private final UIProvider uiProvider = new UIProvider() {

@@ -20,12 +20,16 @@ import java.util.List;
 
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Position;
+import com.google.gwt.dom.client.Style.TextAlign;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.vaadin.client.FastStringMap;
@@ -52,8 +56,6 @@ public abstract class ConnectorBundleLoader {
     public static final String DEFERRED_BUNDLE_NAME = "__deferred";
 
     private static ConnectorBundleLoader impl;
-
-    private static HTML notice;
 
     private FastStringMap<AsyncBundleLoader> asyncBlockLoaders = FastStringMap
             .create();
@@ -145,32 +147,23 @@ public abstract class ConnectorBundleLoader {
 
     public void cval(String typeName) {
         if (!cvals.isEmpty()) {
-            String msg = "";
             for (CValUiInfo c : cvals) {
                 String ns = c.widgetset.replaceFirst("\\.[^\\.]+$", "");
                 if (typeName.startsWith(ns)) {
                     cvals.remove(c);
-                    msg += c.product + " " + c.version + "\n";
+                    notice(c.product + " " + c.version);
+                    return;
                 }
-            }
-            if (!msg.isEmpty()) {
-                showNotice("Using Evaluation License of:\n" + msg);
             }
         }
     }
 
+    private HTML notice;
+
     // Not using Vaadin notifications (#14597)
-    private static void showNotice(String msg) {
+    private  void notice(String msg) {
         if (notice == null) {
-            notice = new HTML();
-            Style s = notice.getElement().getStyle();
-            s.setColor("white");
-            s.setPosition(Position.FIXED);
-            s.setBottom(15, Unit.PX);
-            s.setRight(15, Unit.PX);
-            s.setFontSize(1.3, Unit.EM);
-            s.setProperty("text-shadow", "2px 1px 4px black");
-            s.setZIndex(2147483646);
+            notice = new HTML("Using Evaluation License of:");
             notice.addClickHandler(new ClickHandler() {
                 public void onClick(ClickEvent event) {
                     notice.removeFromParent();
@@ -182,8 +175,20 @@ public abstract class ConnectorBundleLoader {
                 }
             });
         }
-        notice.setHTML(msg.replace("\n", "<br/>"));
-        notice.setVisible(true);
+        notice.setHTML(notice.getHTML() + "<br/>" + msg);
         RootPanel.get().add(notice);
+
+        notice.getElement().setClassName("");
+        Style s = notice.getElement().getStyle();
+        s.setColor("white");
+        s.setProperty("text-shadow", "2px 1px 4px black");
+        s.setPosition(Position.FIXED);
+        s.setTextAlign(TextAlign.CENTER);
+        s.setWidth(100, Unit.PCT);
+        s.setBottom(10, Unit.PX);
+        s.setFontSize(1.3, Unit.EM);
+        s.setZIndex(2147483646);
+        s.setOpacity(1);
+        s.setDisplay(Display.BLOCK);
     }
 }

@@ -18,6 +18,7 @@ package com.vaadin.tools;
 
 import static java.lang.Integer.parseInt;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -152,10 +153,9 @@ public final class CvalChecker {
         }
 
         public boolean isLicenseExpired() {
-            return false;
-//            return (getExpired() != null && getExpired())
-//                    || (getExpiredEpoch() != null && getExpiredEpoch().before(
-//                            new Date()));
+            return (getExpired() != null && getExpired())
+                    || (getExpiredEpoch() != null && getExpiredEpoch().before(
+                            new Date()));
         }
 
         public boolean isValidVersion(int majorVersion) {
@@ -183,7 +183,7 @@ public final class CvalChecker {
                 throws IOException {
             String url = licenseUrl + productKey;
             URLConnection con;
-//            try {
+            try {
                 // Send some additional info in the User-Agent string.
                 String ua = "Cval " + productName + " " + productKey + " "
                         + getFirstLaunch();
@@ -191,23 +191,16 @@ public final class CvalChecker {
                         "java.version", "os.name", "os.version", "os.arch")) {
                     ua += " " + System.getProperty(prop, "-").replace(" ", "_");
                 }
-                try {
-                System.err.println(">>>>> " + url);
                 con = new URL(url).openConnection();
                 con.setRequestProperty("User-Agent", ua);
                 con.setConnectTimeout(timeoutMs);
                 con.setReadTimeout(timeoutMs);
                 String r = IOUtils.toString(con.getInputStream());
-                System.err.println(">>>> " + r);
                 return r;
-                } catch(Exception e) {
-                    e.printStackTrace();
-                    throw new RuntimeException(e);
-                }
-//            } catch (MalformedURLException e) {
-//                e.printStackTrace();
-//                return null;
-//            }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
 
         /*
@@ -290,8 +283,6 @@ public final class CvalChecker {
      */
     static void cacheLicenseInfo(CvalInfo info) {
         if (info != null) {
-            System.err.println("CACHING");
-            try {
             Preferences p = Preferences.userNodeForPackage(CvalInfo.class);
             if (info.toString().length() > Preferences.MAX_VALUE_LENGTH) {
                 // This should never happen since MAX_VALUE_LENGTH is big
@@ -300,11 +291,7 @@ public final class CvalChecker {
                 // discard it in cache and would use hard-coded messages.
                 info.setMessage(null);
             }
-            System.err.println("CACHING ...");
             p.put(info.getProduct().getName(), info.toString());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -312,13 +299,8 @@ public final class CvalChecker {
      * used in tests
      */
     static void deleteCache(String productName) {
-        System.err.println("DELETE");
-        try {
         Preferences p = Preferences.userNodeForPackage(CvalInfo.class);
         p.remove(productName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -378,7 +360,6 @@ public final class CvalChecker {
     public CvalInfo validateProduct(String productName, String productVersion,
             String productTitle) throws InvalidCvalException,
             UnreachableCvalServerException {
-        try {
         String key = getDeveloperLicenseKey(productName, productVersion,
                 productTitle);
 
@@ -399,12 +380,6 @@ public final class CvalChecker {
 
         throw new InvalidCvalException(productName, productVersion,
                 productTitle, key, info);
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (e instanceof InvalidCvalException) throw (InvalidCvalException) e;
-            if (e instanceof UnreachableCvalServerException) throw (UnreachableCvalServerException) e;
-            else throw new RuntimeException(e);
-        }
     }
 
     /*
@@ -461,8 +436,6 @@ public final class CvalChecker {
     }
 
     private CvalInfo getCachedLicenseInfo(String productName) {
-        System.err.println("GETTTTT ");
-        try {
         Preferences p = Preferences.userNodeForPackage(CvalInfo.class);
         String json = p.get(productName, "");
         if (!json.isEmpty()) {
@@ -470,9 +443,6 @@ public final class CvalChecker {
             if (info != null) {
                 return info;
             }
-        }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -483,13 +453,13 @@ public final class CvalChecker {
         String licenseName = computeLicenseName(productName);
 
         String key = System.getProperty(licenseName);
-        System.err.println(licenseName + " -> " + key);
         if (key != null && !key.isEmpty()) {
             return key;
         }
 
         try {
             String dotLicenseName = "." + licenseName;
+            System.err.println("MMMM" + new File(System.getProperty("user.home")).toURI());
             String userHome = "file:///" + System.getProperty("user.home") + "/";
             System.err.println(userHome);
             for (URL url : new URL[] { new URL(userHome + dotLicenseName),
@@ -497,18 +467,14 @@ public final class CvalChecker {
                     URL.class.getResource("/" + dotLicenseName),
                     URL.class.getResource("/" + licenseName) }) {
 
-                System.err.println(url);
                 if (url != null) {
-                    System.err.println("READING: " + url);
                     try {
                         key = readKeyFromFile(url,
                                 computeMajorVersion(productVersion));
-                        System.err.println("KEY " + key);
                         if (key != null && !(key = key.trim()).isEmpty()) {
                             return key;
                         }
                     } catch (IOException ignored) {
-                        ignored.printStackTrace();
                     }
                 }
             }
