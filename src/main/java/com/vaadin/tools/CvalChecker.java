@@ -459,15 +459,15 @@ public final class CvalChecker {
 
         try {
             String dotLicenseName = "." + licenseName;
-            System.err.println("MMMM" + new File(System.getProperty("user.home")).toURI());
-            String userHome = "file:///" + System.getProperty("user.home") + "/";
-            System.err.println(userHome);
-            for (URL url : new URL[] { new URL(userHome + dotLicenseName),
-                    new URL(userHome + licenseName),
+            String userHome = System.getProperty("user.home");
+            for (URL url : new URL[] {
+                    new File(userHome + "/" + dotLicenseName).toURI().toURL(),
+                    new File(userHome + "/" + licenseName).toURI().toURL(),
                     URL.class.getResource("/" + dotLicenseName),
                     URL.class.getResource("/" + licenseName) }) {
 
                 if (url != null) {
+                    System.err.println(url);
                     try {
                         key = readKeyFromFile(url,
                                 computeMajorVersion(productVersion));
